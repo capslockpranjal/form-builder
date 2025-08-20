@@ -1,8 +1,22 @@
 import axios from 'axios'
 
+// Resolve API base URL from Vite env with sensible defaults.
+// Accept values like "http://localhost:5000" or "http://localhost:5000/api".
+const apiUrlFromEnv = ((import.meta as any)?.env?.VITE_API_URL as string | undefined)?.trim()
+
+function resolveBaseUrl(envUrl?: string): string {
+  if (!envUrl) return '/api'
+  const withoutTrailingSlash = envUrl.replace(/\/+$/, '')
+  return withoutTrailingSlash.endsWith('/api')
+    ? withoutTrailingSlash
+    : `${withoutTrailingSlash}/api`
+}
+
+const resolvedBaseURL = resolveBaseUrl(apiUrlFromEnv)
+
 // Create axios instance
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: resolvedBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
