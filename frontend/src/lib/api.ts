@@ -1,8 +1,8 @@
-import axios from 'axios'
+import axios, { type AxiosResponse, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 // Resolve API base URL from Vite env with sensible defaults.
 // Accept values like "http://localhost:5000" or "http://localhost:5000/api".
-const apiUrlFromEnv = ((import.meta as any)?.env?.VITE_API_URL as string | undefined)?.trim()
+const apiUrlFromEnv = import.meta.env.VITE_API_URL?.trim()
 
 function resolveBaseUrl(envUrl?: string): string {
   if (!envUrl) return '/api'
@@ -24,25 +24,25 @@ export const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add auth token if available
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const token = localStorage.getItem('authToken')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: `Bearer ${token}`,
+      } as any
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error: AxiosError) => Promise.reject(error)
 )
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse): AxiosResponse => {
     return response
   },
-  (error) => {
+  (error: AxiosError) => {
     // Handle common errors
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login or clear token
